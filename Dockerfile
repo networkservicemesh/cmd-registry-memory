@@ -10,11 +10,10 @@ RUN go run github.com/edwarnicke/dl \
 FROM go as build
 WORKDIR /build
 COPY go.mod go.sum ./
-COPY ./local ./local
-COPY pkg ./internal/imports
-RUN go build ./internal/imports
+COPY pkg ./pkg
+RUN go build ./pkg/imports
 COPY . .
-RUN go build -o /bin/nsmgr .
+RUN go build -o /bin/registry-memory .
 
 FROM build as test
 CMD go test -test.v ./...
@@ -23,5 +22,5 @@ FROM test as debug
 CMD dlv -l :40000 --headless=true --api-version=2 test -test.v ./...
 
 FROM alpine as runtime
-COPY --from=build /bin/nsmgr /bin/nsmgr
-CMD /bin/nsmgr
+COPY --from=build /bin/registry-memory /bin/registry-memory
+CMD /bin/registry-memory
