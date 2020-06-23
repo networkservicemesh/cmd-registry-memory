@@ -200,6 +200,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: printenv
+  docker:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.4
+      - name: Build container
+        run: docker build .
+      - name: Run tests
+        run: docker run --rm $(docker build -q . --target test)
   automerge:
     name: automerge
     runs-on: ubuntu-latest

@@ -11,7 +11,7 @@ FROM go as build
 WORKDIR /build
 COPY go.mod go.sum ./
 COPY ./local ./local
-COPY ./internal/imports ./internal/imports
+COPY pkg ./internal/imports
 RUN go build ./internal/imports
 COPY . .
 RUN go build -o /bin/nsmgr .
