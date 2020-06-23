@@ -14,13 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd_registry_memory
+package main
 
 import (
 	"context"
+	"net/url"
+	"os"
+	"time"
+
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/networkservicemesh/api/pkg/api/registry"
+	"github.com/sirupsen/logrus"
+	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+
 	"github.com/networkservicemesh/sdk/pkg/registry/common/seturl"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/chain"
 	"github.com/networkservicemesh/sdk/pkg/registry/memory"
@@ -28,19 +38,11 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/signalctx"
-	"github.com/sirupsen/logrus"
-	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
-	"github.com/spiffe/go-spiffe/v2/workloadapi"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"net/url"
-	"os"
-	"time"
 )
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	NetworkServiceManagerUrl string
+	NetworkServiceManagerURL string
 	ListenOn                 url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
 	ConnectTo                url.URL `default:"unix:///connect.to.socket" desc:"url to connect to" split_words:"true"`
 }
