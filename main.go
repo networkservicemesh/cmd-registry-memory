@@ -44,8 +44,7 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn  url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ConnectTo url.URL `default:"unix:///connect.to.socket" desc:"url to connect to" split_words:"true"`
+	ListenOn url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
 }
 
 func main() {
