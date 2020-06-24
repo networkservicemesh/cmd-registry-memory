@@ -172,7 +172,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	t.NoError(err)
 	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		NetworkServiceName: []string{
+		NetworkServiceNames: []string{
 			"ns-1",
 		},
 	})

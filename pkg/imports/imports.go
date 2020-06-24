@@ -9,6 +9,8 @@ import (
 	_ "github.com/kelseyhightower/envconfig"
 	_ "github.com/networkservicemesh/api/pkg/api"
 	_ "github.com/networkservicemesh/api/pkg/api/registry"
+	_ "github.com/networkservicemesh/sdk/pkg/networkservice/chains/registry"
+	_ "github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/seturl"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/core/chain"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/memory"
