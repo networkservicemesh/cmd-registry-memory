@@ -37,7 +37,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/networkservicemesh/sdk/pkg/registry/common/seturl"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/chain"
 	"github.com/networkservicemesh/sdk/pkg/registry/memory"
 	"github.com/networkservicemesh/sdk/pkg/tools/debug"
@@ -48,9 +47,8 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	NetworkServiceManagerURL string
-	ListenOn                 url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ConnectTo                url.URL `default:"unix:///connect.to.socket" desc:"url to connect to" split_words:"true"`
+	ListenOn  url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ConnectTo url.URL `default:"unix:///connect.to.socket" desc:"url to connect to" split_words:"true"`
 }
 
 func main() {
@@ -93,7 +91,6 @@ func main() {
 	logrus.Infof("SVID: %q", svid.ID)
 
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
-		seturl.NewServer(""),
 		setid.NewNetworkServiceEndpointRegistryServer(),
 		memory.NewNetworkServiceEndpointRegistryServer(),
 	)
