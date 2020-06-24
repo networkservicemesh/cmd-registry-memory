@@ -22,6 +22,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
+
+	"github.com/networkservicemesh/api/pkg/api"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/networkservicemesh/api/pkg/api/registry"
@@ -88,6 +94,7 @@ func main() {
 
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
 		seturl.NewServer(""),
+		setid.NewNetworkServiceEndpointRegistryServer(),
 		memory.NewNetworkServiceEndpointRegistryServer(),
 	)
 
@@ -95,11 +102,18 @@ func main() {
 		memory.NewNetworkServiceRegistryServer(),
 	)
 
-	// Create GRPC Server
-	// TODO - add ServerOptions for Tracing
+	// Create GRPC Server and register services
 	server := grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeAny()))))
 	registry.RegisterNetworkServiceRegistryServer(server, nsChain)
 	registry.RegisterNetworkServiceEndpointRegistryServer(server, nseChain)
+	healthServer := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(server, healthServer)
+	for _, service := range api.ServiceNames(nseChain) {
+		healthServer.SetServingStatus(service, grpc_health_v1.HealthCheckResponse_SERVING)
+	}
+	for _, service := range api.ServiceNames(nsChain) {
+		healthServer.SetServingStatus(service, grpc_health_v1.HealthCheckResponse_SERVING)
+	}
 
 	srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn, server)
 	exitOnErr(ctx, cancel, srvErrCh)
