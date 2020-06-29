@@ -113,10 +113,10 @@ github.com/nats-io/nkeys v0.1.0/go.mod h1:xpnFELMwJABBLVhffcfd1MZx6VsNRFpEugbxzi
 github.com/nats-io/nkeys v0.1.3/go.mod h1:xpnFELMwJABBLVhffcfd1MZx6VsNRFpEugbxziKVo7w=
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/nats-io/stan.go v0.6.0/go.mod h1:eIcD5bi3pqbHT/xIIvXMwvzXYElgouBvaVRftaE+eac=
-github.com/networkservicemesh/api v0.0.0-20200624081808-b4345390d693 h1:93H+LlK89rTB3H9KVF2ATR5igbfKAShp3oRuu9tMO0w=
-github.com/networkservicemesh/api v0.0.0-20200624081808-b4345390d693/go.mod h1:6hH0TfujZVin9W/6rWY7JnmNBNRvUrgXhr1aWyKuQKI=
-github.com/networkservicemesh/sdk v0.0.0-20200624144614-1f0768d3a3ad h1:xqpLIZ0xmY/rf6ZOsWzj+0vedd/WGy3xtYE7LRFV7WY=
-github.com/networkservicemesh/sdk v0.0.0-20200624144614-1f0768d3a3ad/go.mod h1:tK20aN7eXwBGdU/lfgUp8UPWnGJ3PoflTCxSjGxzJjM=
+github.com/networkservicemesh/api v0.0.0-20200626035416-b2c37e63dc22 h1:k1iryme3ckQpHc3w2Ry5n+UBs1W3ivKxOsfxSGYaBk0=
+github.com/networkservicemesh/api v0.0.0-20200626035416-b2c37e63dc22/go.mod h1:6hH0TfujZVin9W/6rWY7JnmNBNRvUrgXhr1aWyKuQKI=
+github.com/networkservicemesh/sdk v0.0.0-20200629172005-565dea8c3a8f h1:U7PwYU9wJ8RHRCt1GmY7A/Z2nUaxLyJ6kCWV7369sOg=
+github.com/networkservicemesh/sdk v0.0.0-20200629172005-565dea8c3a8f/go.mod h1:DJ4hkVnXOIyJqqJbOTmZTLhCLlkEjCOcvSp++OCPfOs=
 github.com/olekukonko/tablewriter v0.0.1/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/open-policy-agent/opa v0.16.1 h1:BDADmi1Xl08aPcubaYgSEU0lJ/zrWDwmFMRXVPX856c=
 github.com/open-policy-agent/opa v0.16.1/go.mod h1:P0xUE/GQAAgnvV537GzA0Ikw4+icPELRT327QJPkaKY=
