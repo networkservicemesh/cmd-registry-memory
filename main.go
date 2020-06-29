@@ -22,6 +22,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/networkservicemesh/sdk/pkg/registry/common/expire"
+	"github.com/networkservicemesh/sdk/pkg/registry/core/adapters"
+
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/registry"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
@@ -88,11 +91,11 @@ func main() {
 
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
 		setid.NewNetworkServiceEndpointRegistryServer(),
-		memory.NewNetworkServiceEndpointRegistryServer(),
+		expire.NewNetworkServiceEndpointRegistryServer(memory.NewNetworkServiceEndpointRegistryServer(), expire.WithPeriod(time.Second)),
 	)
 
 	nsChain := chain.NewNetworkServiceRegistryServer(
-		memory.NewNetworkServiceRegistryServer(),
+		expire.NewNetworkServiceServer(memory.NewNetworkServiceRegistryServer(), adapters.NetworkServiceEndpointServerToClient(nseChain), expire.WithPeriod(time.Second)),
 	)
 
 	// Create GRPC Server and register services

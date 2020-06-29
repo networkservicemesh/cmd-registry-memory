@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.1.0
 	github.com/edwarnicke/exechelper v1.0.1
+	github.com/golang/protobuf v1.4.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/networkservicemesh/api v0.0.0-20200626035416-b2c37e63dc22
 	github.com/networkservicemesh/sdk v0.0.0-20200701030821-8f11330489a6
