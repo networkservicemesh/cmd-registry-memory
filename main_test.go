@@ -19,11 +19,12 @@ package main_test
 import (
 	"context"
 	"fmt"
-	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 
 	"github.com/sirupsen/logrus"
 
