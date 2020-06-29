@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
+
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 
 	"github.com/sirupsen/logrus"
@@ -183,9 +185,12 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	)
 	t.NoError(err)
 
-	client := refresh.NewNetworkServiceEndpointRegistryClient(
-		registry.NewNetworkServiceEndpointRegistryClient(cc),
-		refresh.WithDefaultExpiration(time.Second*5),
+	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	client = next.NewNetworkServiceEndpointRegistryClient(
+		refresh.NewNetworkServiceEndpointRegistryClient(
+			client,
+			refresh.WithDefaultExpiration(time.Second*5)),
+		client,
 	)
 
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
@@ -244,9 +249,13 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
-	client := refresh.NewNetworkServiceEndpointRegistryClient(
-		registry.NewNetworkServiceEndpointRegistryClient(cc),
-		refresh.WithDefaultExpiration(time.Millisecond*200),
+
+	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	client = next.NewNetworkServiceEndpointRegistryClient(
+		refresh.NewNetworkServiceEndpointRegistryClient(
+			client,
+			refresh.WithDefaultExpiration(time.Millisecond*200)),
+		client,
 	)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
 		NetworkServiceNames: []string{
