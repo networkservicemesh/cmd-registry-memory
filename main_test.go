@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
+
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
@@ -169,6 +171,9 @@ func (t *RegistryTestSuite) TestNetworkServiceRegistration() {
 	_, err = client.Unregister(context.Background(), &registry.NetworkService{
 		Name: "ns-1",
 	})
+	if err != nil {
+		logrus.Error(err.Error())
+	}
 	t.Nil(err)
 	stream, err = client.Find(context.Background(), &registry.NetworkServiceQuery{NetworkService: &registry.NetworkService{Name: "ns-1"}})
 	t.Nil(err)
@@ -189,7 +194,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	client = next.NewNetworkServiceEndpointRegistryClient(
 		refresh.NewNetworkServiceEndpointRegistryClient(
 			client,
-			refresh.WithDefaultExpiration(time.Second*5)),
+			refresh.WithDefaultExpiryDuration(time.Second*5)),
 		client,
 	)
 
@@ -222,19 +227,24 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	)
 	t.NoError(err)
 	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	expireTime := time.Now().Add(time.Second)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
+		ExpirationTime: &timestamp.Timestamp{
+			Nanos:   int32(expireTime.Nanosecond()),
+			Seconds: expireTime.Unix(),
+		},
 	})
 	t.Nil(err)
 	t.NotEmpty(result.Name)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: result.Name}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, 1)
 	t.Eventually(func() bool {
-		stream, err = client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
+		stream, err = client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: result.Name}})
 		t.Nil(err)
 		list = registry.ReadNetworkServiceEndpointList(stream)
 		return len(list) == 0
@@ -250,26 +260,36 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	)
 	t.NoError(err)
 
-	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
-	client = next.NewNetworkServiceEndpointRegistryClient(
-		refresh.NewNetworkServiceEndpointRegistryClient(
+	clientCount := 10
+	var names []string
+	for i := 0; i < clientCount; i++ {
+		client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+		client = next.NewNetworkServiceEndpointRegistryClient(
+			refresh.NewNetworkServiceEndpointRegistryClient(
+				client,
+				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
 			client,
-			refresh.WithDefaultExpiration(time.Millisecond*200)),
-		client,
-	)
-	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		NetworkServiceNames: []string{
-			"ns-1",
-		},
-	})
-	t.Nil(err)
-	t.NotEmpty(result.Name)
+		)
+		result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+			NetworkServiceNames: []string{
+				"my-network-service",
+			},
+		})
+		t.Nil(err)
+		t.NotEmpty(result.Name)
+		names = append(names, result.Name)
+	}
+
+	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+
 	<-time.After(time.Second)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
-	t.Len(list, 1)
-	_, err = client.Unregister(ctx, result)
+	t.Len(list, clientCount)
+	for _, name := range names {
+		_, err = client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: name})
+	}
 	t.NoError(err)
 }
 
