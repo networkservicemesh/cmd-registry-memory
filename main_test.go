@@ -270,12 +270,12 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
 			client,
 		)
-		result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
 			NetworkServiceNames: []string{
 				"my-network-service",
 			},
 		})
-		t.Nil(err)
+		t.NoError(regErr)
 		t.NotEmpty(result.Name)
 		names = append(names, result.Name)
 	}
