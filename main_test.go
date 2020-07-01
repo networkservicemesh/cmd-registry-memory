@@ -24,13 +24,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
+
+	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
+
+	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
+
 	"github.com/sirupsen/logrus"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/exechelper"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/networkservicemesh/api/pkg/api/registry"
-	main "github.com/networkservicemesh/cmd-registry-memory"
 	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
@@ -40,6 +45,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
+
+	main "github.com/networkservicemesh/cmd-registry-memory"
 
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
 )
@@ -133,6 +140,15 @@ func (t *RegistryTestSuite) TestHealthCheck() {
 	t.NoError(err)
 	t.NotNil(healthResponse)
 	t.Equal(grpc_health_v1.HealthCheckResponse_SERVING, healthResponse.Status)
+	healthResponse, err = healthClient.Check(ctx,
+		&grpc_health_v1.HealthCheckRequest{
+			Service: "registry.NetworkServiceRegistry",
+		},
+		grpc.WaitForReady(true),
+	)
+	t.NoError(err)
+	t.NotNil(healthResponse)
+	t.Equal(grpc_health_v1.HealthCheckResponse_SERVING, healthResponse.Status)
 }
 
 func (t *RegistryTestSuite) TestNetworkServiceRegistration() {
@@ -170,12 +186,21 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
+
 	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	client = next.NewNetworkServiceEndpointRegistryClient(
+		refresh.NewNetworkServiceEndpointRegistryClient(
+			client,
+			refresh.WithDefaultExpiryDuration(time.Second*5)),
+		client,
+	)
+
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
 	})
+
 	t.Nil(err)
 	t.NotEmpty(result.Name)
 	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
@@ -188,6 +213,81 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	t.Nil(err)
 	list = registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, 0)
+}
+
+func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
+	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
+	defer cancel()
+	cc, err := grpc.DialContext(ctx,
+		t.config.ListenOn.String(),
+		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+	)
+	t.NoError(err)
+	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	expireTime := time.Now().Add(time.Second)
+	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+		NetworkServiceNames: []string{
+			"ns-1",
+		},
+		ExpirationTime: &timestamp.Timestamp{
+			Nanos:   int32(expireTime.Nanosecond()),
+			Seconds: expireTime.Unix(),
+		},
+	})
+	t.Nil(err)
+	t.NotEmpty(result.Name)
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: result.Name}})
+	t.Nil(err)
+	list := registry.ReadNetworkServiceEndpointList(stream)
+	t.Len(list, 1)
+	t.Eventually(func() bool {
+		stream, err = client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: result.Name}})
+		t.Nil(err)
+		list = registry.ReadNetworkServiceEndpointList(stream)
+		return len(list) == 0
+	}, time.Second*5, time.Millisecond*100)
+}
+
+func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
+	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
+	defer cancel()
+	cc, err := grpc.DialContext(ctx,
+		t.config.ListenOn.String(),
+		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+	)
+	t.NoError(err)
+
+	clientCount := 10
+	var names []string
+	for i := 0; i < clientCount; i++ {
+		client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+		client = next.NewNetworkServiceEndpointRegistryClient(
+			refresh.NewNetworkServiceEndpointRegistryClient(
+				client,
+				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
+			client,
+		)
+		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+			NetworkServiceNames: []string{
+				"my-network-service",
+			},
+		})
+		t.NoError(regErr)
+		t.NotEmpty(result.Name)
+		names = append(names, result.Name)
+	}
+
+	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+
+	<-time.After(time.Second)
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
+	t.Nil(err)
+	list := registry.ReadNetworkServiceEndpointList(stream)
+	t.Len(list, clientCount)
+	for _, name := range names {
+		_, err = client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: name})
+	}
+	t.NoError(err)
 }
 
 func TestRegistryTestSuite(t *testing.T) {
