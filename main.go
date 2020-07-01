@@ -47,7 +47,8 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ListenOn     url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ExpirePeriod time.Duration `default:"1s" desc: "period to check expired NSEs" split_words:"true"`
 }
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
 		log.Entry(ctx).Infof("%s", err)
 	}
 
-	starttime := time.Now()
+	startTime := time.Now()
 
 	// Get config from environment
 	config := &Config{}
@@ -91,11 +92,11 @@ func main() {
 
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
 		setid.NewNetworkServiceEndpointRegistryServer(),
-		expire.NewNetworkServiceEndpointRegistryServer(memory.NewNetworkServiceEndpointRegistryServer(), expire.WithPeriod(time.Second)),
+		expire.NewNetworkServiceEndpointRegistryServer(memory.NewNetworkServiceEndpointRegistryServer(), expire.WithPeriod(config.ExpirePeriod)),
 	)
 
 	nsChain := chain.NewNetworkServiceRegistryServer(
-		expire.NewNetworkServiceServer(memory.NewNetworkServiceRegistryServer(), adapters.NetworkServiceEndpointServerToClient(nseChain), expire.WithPeriod(time.Second)),
+		expire.NewNetworkServiceServer(memory.NewNetworkServiceRegistryServer(), adapters.NetworkServiceEndpointServerToClient(nseChain), expire.WithPeriod(config.ExpirePeriod)),
 	)
 
 	// Create GRPC Server and register services
@@ -105,8 +106,7 @@ func main() {
 
 	srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn, server)
 	exitOnErr(ctx, cancel, srvErrCh)
-	log.Entry(ctx).Infof("Startup completed in %v", time.Since(starttime))
-
+	log.Entry(ctx).Infof("Startup completed in %v", time.Since(startTime))
 	<-ctx.Done()
 }
 
