@@ -48,7 +48,7 @@ import (
 // Config is configuration for cmd-registry-memory
 type Config struct {
 	ListenOn     url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ExpirePeriod time.Duration `default:"1s" desc: "period to check expired NSEs" split_words:"true"`
+	ExpirePeriod time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 }
 
 func main() {
