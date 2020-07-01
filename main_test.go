@@ -171,9 +171,6 @@ func (t *RegistryTestSuite) TestNetworkServiceRegistration() {
 	_, err = client.Unregister(context.Background(), &registry.NetworkService{
 		Name: "ns-1",
 	})
-	if err != nil {
-		logrus.Error(err.Error())
-	}
 	t.Nil(err)
 	stream, err = client.Find(context.Background(), &registry.NetworkServiceQuery{NetworkService: &registry.NetworkService{Name: "ns-1"}})
 	t.Nil(err)
