@@ -167,6 +167,22 @@ jobs:
         run: docker build .
       - name: Run tests
         run: docker run --rm $(docker build -q . --target test)
+      - name: Find merged PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: jwalton/gh-find-current-pr@v1
+        id: findPr
+        with:
+          github-token: ${{ github.token }}
+      - name: Publish Image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success() && steps.findPr.outputs.number
+        uses: matootie/github-docker@v3.0.0
+        with:
+          accessToken: ${{ github.token }}
+          tag: |
+            pr-${{ steps.findPr.outputs.pr }}
+            commit-${{ github.sha }}
+            latest
+
   automerge:
     name: automerge
     runs-on: ubuntu-latest
