@@ -1,6 +1,10 @@
 ---
 name: ci
-on: pull_request
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 jobs:
   yamllint:
     name: yamllint
@@ -173,6 +177,7 @@ jobs:
         id: findPr
         with:
           github-token: ${{ github.token }}
+
       - name: Publish Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success() && steps.findPr.outputs.number
         uses: matootie/github-docker@v3.0.0
