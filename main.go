@@ -22,20 +22,24 @@ import (
 	"os"
 	"time"
 
+	"github.com/networkservicemesh/sdk/pkg/registry/common/connect"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/proxy"
+
 	"github.com/networkservicemesh/sdk/pkg/registry/common/expire"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/adapters"
 
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/registry"
 
-	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
-
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
+	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/core/chain"
 	"github.com/networkservicemesh/sdk/pkg/registry/memory"
@@ -47,8 +51,9 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn     url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ExpirePeriod time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	ListenOn         url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
+	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 }
 
 func main() {
@@ -93,10 +98,22 @@ func main() {
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
 		setid.NewNetworkServiceEndpointRegistryServer(),
 		expire.NewNetworkServiceEndpointRegistryServer(memory.NewNetworkServiceEndpointRegistryServer(), expire.WithPeriod(config.ExpirePeriod)),
+		proxy.NewNetworkServiceEndpointRegistryServer(&config.ProxyRegistryURL),
+		connect.NewNetworkServiceEndpointRegistryServer(func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceEndpointRegistryClient {
+			return chain.NewNetworkServiceEndpointRegistryClient(
+				api_registry.NewNetworkServiceEndpointRegistryClient(cc),
+			)
+		}),
 	)
 
 	nsChain := chain.NewNetworkServiceRegistryServer(
 		expire.NewNetworkServiceServer(memory.NewNetworkServiceRegistryServer(), adapters.NetworkServiceEndpointServerToClient(nseChain), expire.WithPeriod(config.ExpirePeriod)),
+		proxy.NewNetworkServiceRegistryServer(&config.ProxyRegistryURL),
+		connect.NewNetworkServiceRegistryServer(func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceRegistryClient {
+			return chain.NewNetworkServiceRegistryClient(
+				api_registry.NewNetworkServiceRegistryClient(cc),
+			)
+		}),
 	)
 
 	// Create GRPC Server and register services
