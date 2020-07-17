@@ -5,6 +5,16 @@ run:
   issues-exit-code: 1
   tests: true
 linters-settings:
+  goheader:
+    template-path: ".license/template.txt"
+    values:
+      const:
+        year: 2020
+      regexp:
+        year-range: ((\d\d\d\d-{{year}})|({{year}}))
+        company: .*
+        copyright-holder: Copyright \(c\) {{year-range}} {{company}}\n\n
+        copyright-holders: ({{copyright-holder}})+
   errcheck:
     check-type-assertions: false
     check-blank: false
@@ -20,7 +30,7 @@ linters-settings:
   golint:
     min-confidence: 0.8
   goimports:
-    local-prefixes: github.com/networkservicemesh/sdk
+    local-prefixes: github.com/networkservicemesh/cmd-registry-memory
   gocyclo:
     min-complexity: 15
   maligned:
@@ -122,6 +132,7 @@ linters:
   disable-all: true
   enable:
     # - rowserrcheck
+    - goheader
     - bodyclose
     - deadcode
     - depguard
@@ -158,4 +169,3 @@ issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
