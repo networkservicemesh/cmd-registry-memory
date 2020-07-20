@@ -7,8 +7,8 @@ require (
 	github.com/edwarnicke/exechelper v1.0.1
 	github.com/golang/protobuf v1.4.2
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/networkservicemesh/api v0.0.0-20200626035416-b2c37e63dc22
-	github.com/networkservicemesh/sdk v0.0.0-20200717072118-51dcbf28107e
+	github.com/networkservicemesh/api v0.0.0-20200719005259-ed500e834d1e
+	github.com/networkservicemesh/sdk v0.0.0-20200720051532-c865f523d29f
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spiffe/go-spiffe/v2 v2.0.0-alpha.4.0.20200528145730-dc11d0c74e85
 	github.com/stretchr/testify v1.5.1
