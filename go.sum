@@ -199,8 +199,6 @@ github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OS
 github.com/nats-io/stan.go v0.6.0/go.mod h1:eIcD5bi3pqbHT/xIIvXMwvzXYElgouBvaVRftaE+eac=
 github.com/networkservicemesh/api v0.0.0-20200719005259-ed500e834d1e h1:b8XWqvwV/lxkT0PF5vYLZGCiObRq5uKp25YGRBPJRiI=
 github.com/networkservicemesh/api v0.0.0-20200719005259-ed500e834d1e/go.mod h1:6hH0TfujZVin9W/6rWY7JnmNBNRvUrgXhr1aWyKuQKI=
-github.com/networkservicemesh/sdk v0.0.0-20200720062835-6eb2f15df0de h1:p6p/jmjJGeOXR7WZYGfEGd/HxAsTd1RRpRbtGHlaZFk=
-github.com/networkservicemesh/sdk v0.0.0-20200720062835-6eb2f15df0de/go.mod h1:Qj3oznql/TfH34/OYW4vvjxT4SQWUxmsCsvOKe4XdbE=
 github.com/networkservicemesh/sdk v0.0.0-20200722162841-6c9dad8a3315 h1:H5DNnBqc328NXKeuH++zSDJT425QO9hDe//2zNf4Czk=
 github.com/networkservicemesh/sdk v0.0.0-20200722162841-6c9dad8a3315/go.mod h1:Qj3oznql/TfH34/OYW4vvjxT4SQWUxmsCsvOKe4XdbE=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
