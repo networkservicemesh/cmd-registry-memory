@@ -1,0 +1,27 @@
+---
+name: push
+on:
+  push:
+    branches:
+      - master
+jobs:
+  pushImage:
+    name: push image
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_USER: ${{ secrets.DOCKER_LOGIN }}
+      TAG: master
+      ORG: networkservicemeshci
+      CGO_ENABLED: 0
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.4
+      - name: Build container
+        run: docker build .
+      - name: Push coredns image
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          docker push "${ORG}/memory-registry:${TAG}"
+          docker image rm "${ORG}/memory-registry:${TAG}"
