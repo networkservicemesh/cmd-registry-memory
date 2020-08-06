@@ -22,6 +22,7 @@ jobs:
       - name: Build container
         run: docker build . -t "${ORG}/memory-registry:${TAG}"
       - name: Push coredns image
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           docker push "${ORG}/memory-registry:${TAG}"
           docker image rm "${ORG}/memory-registry:${TAG}"
