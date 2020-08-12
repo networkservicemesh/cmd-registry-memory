@@ -97,7 +97,8 @@ func main() {
 
 	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
 		setid.NewNetworkServiceEndpointRegistryServer(),
-		expire.NewNetworkServiceEndpointRegistryServer(memory.NewNetworkServiceEndpointRegistryServer(), expire.WithPeriod(config.ExpirePeriod)),
+		expire.NewNetworkServiceEndpointRegistryServer(),
+		memory.NewNetworkServiceEndpointRegistryServer(),
 		proxy.NewNetworkServiceEndpointRegistryServer(&config.ProxyRegistryURL),
 		connect.NewNetworkServiceEndpointRegistryServer(ctx, func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceEndpointRegistryClient {
 			return chain.NewNetworkServiceEndpointRegistryClient(
@@ -107,7 +108,8 @@ func main() {
 	)
 
 	nsChain := chain.NewNetworkServiceRegistryServer(
-		expire.NewNetworkServiceServer(memory.NewNetworkServiceRegistryServer(), adapters.NetworkServiceEndpointServerToClient(nseChain), expire.WithPeriod(config.ExpirePeriod)),
+		expire.NewNetworkServiceServer(adapters.NetworkServiceEndpointServerToClient(nseChain)),
+		memory.NewNetworkServiceRegistryServer(),
 		proxy.NewNetworkServiceRegistryServer(&config.ProxyRegistryURL),
 		connect.NewNetworkServiceRegistryServer(ctx, func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceRegistryClient {
 			return chain.NewNetworkServiceRegistryClient(
