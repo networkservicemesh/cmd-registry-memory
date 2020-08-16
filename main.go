@@ -20,7 +20,10 @@ import (
 	"context"
 	"net/url"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/connect"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/proxy"
@@ -32,12 +35,13 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
-	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 
@@ -51,9 +55,8 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn         url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
-	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	ListenOn         url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ProxyRegistryURL url.URL `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 }
 
 func main() {
@@ -85,7 +88,21 @@ func main() {
 	log.Entry(ctx).Infof("Config: %#v", config)
 
 	// Get a X509Source
-	source, err := workloadapi.NewX509Source(ctx)
+	source, err := workloadapi.NewX509Source(ctx,
+		workloadapi.WithClientOptions(workloadapi.WithLogger(log.Entry(ctx))),
+		workloadapi.WithDefaultX509SVIDPicker(func(svids []*x509svid.SVID) *x509svid.SVID {
+			if len(svids) == 0 {
+				return nil
+			}
+			for _, svid := range svids {
+				if strings.HasSuffix(svid.ID.Path(), "registry-memory") {
+					return svid
+				}
+			}
+			return svids[0]
+		}),
+	)
+
 	if err != nil {
 		logrus.Fatalf("error getting x509 source: %+v", err)
 	}
