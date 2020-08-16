@@ -35,7 +35,6 @@ import (
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/exechelper"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
@@ -45,6 +44,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
+
+	"github.com/networkservicemesh/api/pkg/api/registry"
 
 	main "github.com/networkservicemesh/cmd-registry-memory"
 

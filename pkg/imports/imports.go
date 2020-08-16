@@ -14,8 +14,6 @@ import (
 	_ "github.com/edwarnicke/exechelper"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/kelseyhightower/envconfig"
-	_ "github.com/networkservicemesh/api/pkg/api"
-	_ "github.com/networkservicemesh/api/pkg/api/registry"
 	_ "github.com/sirupsen/logrus"
 	_ "github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	_ "github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
@@ -27,6 +25,9 @@ import (
 	_ "google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/health"
 	_ "google.golang.org/grpc/health/grpc_health_v1"
+
+	_ "github.com/networkservicemesh/api/pkg/api"
+	_ "github.com/networkservicemesh/api/pkg/api/registry"
 
 	_ "github.com/networkservicemesh/sdk/pkg/networkservice/chains/registry"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/expire"

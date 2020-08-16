@@ -19,10 +19,10 @@ jobs:
       - uses: actions/setup-go@v1
         with:
           go-version: 1.13.4
-      - name: Build memory-registry image
-        run: docker build . -t "${ORG}/memory-registry:${TAG}" --target runtime
-      - name: Push memory-registry image
+      - name: Build registry-memory image
+        run: docker build . -t "${ORG}/registry-memory:${TAG}" --target runtime
+      - name: Push registry-memory image
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          docker push "${ORG}/memory-registry:${TAG}"
-          docker image rm "${ORG}/memory-registry:${TAG}"
+          docker push "${ORG}/registry-memory:${TAG}"
+          docker image rm "${ORG}/registry-memory:${TAG}"
