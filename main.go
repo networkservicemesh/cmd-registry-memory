@@ -55,9 +55,8 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn         url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
-	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
-	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	ListenOn         url.URL `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ProxyRegistryURL url.URL `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 }
 
 func main() {
@@ -90,9 +89,7 @@ func main() {
 
 	// Get a X509Source
 	source, err := workloadapi.NewX509Source(ctx,
-		workloadapi.WithClientOptions(
-			workloadapi.WithLogger(log.Entry(ctx)),
-			workloadapi.WithAddr("unix://run/spire/sockets/agent.sock")),
+		workloadapi.WithClientOptions(workloadapi.WithLogger(log.Entry(ctx))),
 		workloadapi.WithDefaultX509SVIDPicker(func(svids []*x509svid.SVID) *x509svid.SVID {
 			if len(svids) == 0 {
 				return nil
