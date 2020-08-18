@@ -35,7 +35,6 @@ import (
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/exechelper"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
@@ -45,6 +44,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
+
+	"github.com/networkservicemesh/api/pkg/api/registry"
 
 	main "github.com/networkservicemesh/cmd-registry-memory"
 
@@ -101,7 +102,7 @@ func (t *RegistryTestSuite) SetupSuite() {
 	require.Len(t.T(), t.sutErrCh, 0)
 
 	// Get config from env
-	require.NoError(t.T(), envconfig.Process("nsm", &t.config))
+	require.NoError(t.T(), envconfig.Process("registry-memory", &t.config))
 }
 
 func (t *RegistryTestSuite) TearDownSuite() {
@@ -124,7 +125,7 @@ func (t *RegistryTestSuite) TestHealthCheck() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
 	healthCC, err := grpc.DialContext(ctx,
-		t.config.ListenOn.String(),
+		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	if err != nil {
@@ -155,7 +156,7 @@ func (t *RegistryTestSuite) TestNetworkServiceRegistration() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
 	cc, err := grpc.DialContext(ctx,
-		t.config.ListenOn.String(),
+		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
@@ -182,7 +183,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
 	cc, err := grpc.DialContext(ctx,
-		t.config.ListenOn.String(),
+		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
@@ -219,7 +220,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
 	cc, err := grpc.DialContext(ctx,
-		t.config.ListenOn.String(),
+		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
@@ -252,7 +253,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
 	cc, err := grpc.DialContext(ctx,
-		t.config.ListenOn.String(),
+		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
