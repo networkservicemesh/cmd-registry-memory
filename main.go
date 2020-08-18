@@ -32,12 +32,13 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
-	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/sirupsen/logrus"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 
@@ -51,7 +52,7 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn         url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ListenOn         []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
 	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 }
@@ -123,8 +124,11 @@ func main() {
 
 	registry.NewServer(nsChain, nseChain).Register(server)
 
-	srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn, server)
-	exitOnErr(ctx, cancel, srvErrCh)
+	for i := 0; i < len(config.ListenOn); i++ {
+		srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn[i], server)
+		exitOnErr(ctx, cancel, srvErrCh)
+	}
+
 	log.Entry(ctx).Infof("Startup completed in %v", time.Since(startTime))
 	<-ctx.Done()
 }
