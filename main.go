@@ -51,7 +51,7 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn         url.URL       `default:"unix:///listen.on.socket" desc:"url to listen on" split_words:"true"`
+	ListenOn         []url.URL     `default:"[unix:///var/lib/networkservicemesh/registry.sock" desc:"url to listen on." split_words:"true"`
 	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 }
@@ -123,8 +123,11 @@ func main() {
 
 	registry.NewServer(nsChain, nseChain).Register(server)
 
-	srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn, server)
-	exitOnErr(ctx, cancel, srvErrCh)
+	for i := 0; i < len(config.ListenOn); i++ {
+		srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn[i], server)
+		exitOnErr(ctx, cancel, srvErrCh)
+	}
+
 	log.Entry(ctx).Infof("Startup completed in %v", time.Since(startTime))
 	<-ctx.Done()
 }
