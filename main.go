@@ -105,7 +105,7 @@ func main() {
 			return chain.NewNetworkServiceEndpointRegistryClient(
 				api_registry.NewNetworkServiceEndpointRegistryClient(cc),
 			)
-		}),
+		}, connect.WithClientDialOptions(grpc.WithBlock())),
 	)
 
 	nsChain := chain.NewNetworkServiceRegistryServer(
@@ -116,7 +116,7 @@ func main() {
 			return chain.NewNetworkServiceRegistryClient(
 				api_registry.NewNetworkServiceRegistryClient(cc),
 			)
-		}),
+		}, connect.WithClientDialOptions(grpc.WithBlock())),
 	)
 
 	// Create GRPC Server and register services
