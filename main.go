@@ -140,7 +140,7 @@ func main() {
 }
 
 func exitOnErr(ctx context.Context, cancel context.CancelFunc, errCh <-chan error) {
-	// If we already have an error, log iht and exit
+	// If we already have an error, log it and exit
 	select {
 	case err := <-errCh:
 		log.Entry(ctx).Fatal(err)
