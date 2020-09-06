@@ -76,10 +76,10 @@ func main() {
 
 	// Get config from environment
 	config := &Config{}
-	if err := envconfig.Usage("registry-memory", config); err != nil {
+	if err := envconfig.Usage("registry_memory", config); err != nil {
 		logrus.Fatal(err)
 	}
-	if err := envconfig.Process("registry-memory", config); err != nil {
+	if err := envconfig.Process("registry_memory", config); err != nil {
 		logrus.Fatalf("error processing config from env: %+v", err)
 	}
 
