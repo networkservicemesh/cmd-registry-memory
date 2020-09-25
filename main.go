@@ -22,14 +22,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/networkservicemesh/sdk/pkg/registry/common/connect"
-	"github.com/networkservicemesh/sdk/pkg/registry/common/proxy"
-
-	"github.com/networkservicemesh/sdk/pkg/registry/common/expire"
-	"github.com/networkservicemesh/sdk/pkg/registry/core/adapters"
-
-	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/registry"
-
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
@@ -38,12 +30,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	api_registry "github.com/networkservicemesh/api/pkg/api/registry"
-
-	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
-
-	"github.com/networkservicemesh/sdk/pkg/registry/core/chain"
-	"github.com/networkservicemesh/sdk/pkg/registry/memory"
+	"github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
 	"github.com/networkservicemesh/sdk/pkg/tools/debug"
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
@@ -96,39 +83,11 @@ func main() {
 	}
 	logrus.Infof("SVID: %q", svid.ID)
 
-	nseChain := chain.NewNetworkServiceEndpointRegistryServer(
-		setid.NewNetworkServiceEndpointRegistryServer(),
-		expire.NewNetworkServiceEndpointRegistryServer(),
-		memory.NewNetworkServiceEndpointRegistryServer(),
-		proxy.NewNetworkServiceEndpointRegistryServer(&config.ProxyRegistryURL),
-		connect.NewNetworkServiceEndpointRegistryServer(ctx, func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceEndpointRegistryClient {
-			return chain.NewNetworkServiceEndpointRegistryClient(
-				api_registry.NewNetworkServiceEndpointRegistryClient(cc),
-			)
-		}, connect.WithClientDialOptions(
-			grpc.WithBlock(),
-			grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(source, source, tlsconfig.AuthorizeAny()))),
-		)),
-	)
-
-	nsChain := chain.NewNetworkServiceRegistryServer(
-		expire.NewNetworkServiceServer(adapters.NetworkServiceEndpointServerToClient(nseChain)),
-		memory.NewNetworkServiceRegistryServer(),
-		proxy.NewNetworkServiceRegistryServer(&config.ProxyRegistryURL),
-		connect.NewNetworkServiceRegistryServer(ctx, func(ctx context.Context, cc grpc.ClientConnInterface) api_registry.NetworkServiceRegistryClient {
-			return chain.NewNetworkServiceRegistryClient(
-				api_registry.NewNetworkServiceRegistryClient(cc),
-			)
-		}, connect.WithClientDialOptions(
-			grpc.WithBlock(),
-			grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(source, source, tlsconfig.AuthorizeAny()))),
-		)),
-	)
-
+	credsTLS := credentials.NewTLS(tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeAny()))
 	// Create GRPC Server and register services
-	server := grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeAny()))))
+	server := grpc.NewServer(grpc.Creds(credsTLS))
 
-	registry.NewServer(nsChain, nseChain).Register(server)
+	memory.NewServer(ctx, &config.ProxyRegistryURL, grpc.WithBlock(), grpc.WithTransportCredentials(credsTLS)).Register(server)
 
 	for i := 0; i < len(config.ListenOn); i++ {
 		srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn[i], server)
