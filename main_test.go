@@ -191,7 +191,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
 	client = next.NewNetworkServiceEndpointRegistryClient(
 		refresh.NewNetworkServiceEndpointRegistryClient(
-			client,
 			refresh.WithDefaultExpiryDuration(time.Second*5)),
 		client,
 	)
@@ -264,7 +263,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 		client := registry.NewNetworkServiceEndpointRegistryClient(cc)
 		client = next.NewNetworkServiceEndpointRegistryClient(
 			refresh.NewNetworkServiceEndpointRegistryClient(
-				client,
 				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
 			client,
 		)
