@@ -8,8 +8,8 @@ require (
 	github.com/edwarnicke/serialize v1.0.0 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/networkservicemesh/api v0.0.0-20201014184533-ca42a07d7e15
-	github.com/networkservicemesh/sdk v0.0.0-20201026112747-e899f1215ac6
+	github.com/networkservicemesh/api v0.0.0-20201026112722-9b20186587a5
+	github.com/networkservicemesh/sdk v0.0.0-20201026143806-f35dc861cb65
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spiffe/go-spiffe/v2 v2.0.0-alpha.4.0.20200528145730-dc11d0c74e85
 	github.com/stretchr/testify v1.6.1
