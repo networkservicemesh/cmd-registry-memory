@@ -5,11 +5,10 @@ go 1.15
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.1.0
 	github.com/edwarnicke/exechelper v1.0.2
-	github.com/edwarnicke/serialize v1.0.0 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/networkservicemesh/api v0.0.0-20201117093615-ae6039374f31
-	github.com/networkservicemesh/sdk v0.0.0-20201201081247-d0ca5e402484
+	github.com/networkservicemesh/sdk v0.0.0-20201201111053-98deb86e4ee8
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spiffe/go-spiffe/v2 v2.0.0-alpha.4.0.20200528145730-dc11d0c74e85
 	github.com/stretchr/testify v1.6.1
