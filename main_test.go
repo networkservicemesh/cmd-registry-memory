@@ -203,7 +203,9 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 
 	t.Nil(err)
 	t.NotEmpty(result.Name)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{
+		Name: result.Name,
+	}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, 1)
@@ -245,7 +247,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 		t.Nil(err)
 		list = registry.ReadNetworkServiceEndpointList(stream)
 		return len(list) == 0
-	}, time.Second*5, time.Millisecond*100)
+	}, time.Until(result.GetExpirationTime().AsTime())+time.Second*5, time.Millisecond*100)
+
 }
 
 func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
