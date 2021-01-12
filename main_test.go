@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Doc.ai and/or its affiliates.
+// Copyright (c) 2020-2021 Doc.ai and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -248,7 +248,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 		list = registry.ReadNetworkServiceEndpointList(stream)
 		return len(list) == 0
 	}, time.Until(result.GetExpirationTime().AsTime())+time.Second*5, time.Millisecond*100)
-
 }
 
 func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
