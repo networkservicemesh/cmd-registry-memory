@@ -26,6 +26,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 
+	"github.com/networkservicemesh/sdk/pkg/tools/logger"
+
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
@@ -65,7 +67,7 @@ type RegistryTestSuite struct {
 
 func (t *RegistryTestSuite) SetupSuite() {
 	logrus.SetFormatter(&nested.Formatter{})
-	logrus.SetLevel(logrus.TraceLevel)
+	logger.EnableTracing(true)
 	t.ctx, t.cancel = context.WithCancel(context.Background())
 
 	// Run spire
