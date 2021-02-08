@@ -99,7 +99,7 @@ func main() {
 	server := grpc.NewServer(serverOptions...)
 
 	clientOptions := append(opentracing.WithTracingDial(), grpc.WithBlock(), grpc.WithTransportCredentials(credsTLS))
-	memory.NewServer(ctx, &config.ProxyRegistryURL, clientOptions...).Register(server)
+	memory.NewServer(ctx, time.Minute, &config.ProxyRegistryURL, clientOptions...).Register(server)
 
 	for i := 0; i < len(config.ListenOn); i++ {
 		srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn[i], server)
