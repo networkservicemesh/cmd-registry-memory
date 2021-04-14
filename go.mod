@@ -8,7 +8,7 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/networkservicemesh/api v0.0.0-20210413152715-ad449d9a9192
-	github.com/networkservicemesh/sdk v0.0.0-20210413153333-8ad73824271d
+	github.com/networkservicemesh/sdk v0.0.0-20210414142658-66a1b9ac7425
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spiffe/go-spiffe/v2 v2.0.0-alpha.4.0.20200528145730-dc11d0c74e85
 	github.com/stretchr/testify v1.7.0
