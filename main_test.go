@@ -24,17 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
-
-	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
-
-	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
-
-	"github.com/sirupsen/logrus"
-
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/exechelper"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
@@ -46,11 +40,13 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/networkservicemesh/api/pkg/api/registry"
-
-	main "github.com/networkservicemesh/cmd-registry-memory"
-
+	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
+	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
+
+	main "github.com/networkservicemesh/cmd-registry-memory"
 )
 
 type RegistryTestSuite struct {
@@ -189,14 +185,15 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	)
 	t.NoError(err)
 
-	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
-	client = next.NewNetworkServiceEndpointRegistryClient(
+	client := next.NewNetworkServiceEndpointRegistryClient(
+		setid.NewNetworkServiceEndpointRegistryClient(),
 		refresh.NewNetworkServiceEndpointRegistryClient(
 			refresh.WithDefaultExpiryDuration(time.Second*5)),
-		client,
+		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+		Url: "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -226,9 +223,13 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 	)
 	t.NoError(err)
-	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	client := next.NewNetworkServiceEndpointRegistryClient(
+		setid.NewNetworkServiceEndpointRegistryClient(),
+		registry.NewNetworkServiceEndpointRegistryClient(cc),
+	)
 	expireTime := time.Now().Add(time.Second)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+		Url: "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -263,13 +264,14 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	clientCount := 10
 	var names []string
 	for i := 0; i < clientCount; i++ {
-		client := registry.NewNetworkServiceEndpointRegistryClient(cc)
-		client = next.NewNetworkServiceEndpointRegistryClient(
+		client := next.NewNetworkServiceEndpointRegistryClient(
+			setid.NewNetworkServiceEndpointRegistryClient(),
 			refresh.NewNetworkServiceEndpointRegistryClient(
 				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
-			client,
+			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
+			Url: "tcp://127.0.0.1",
 			NetworkServiceNames: []string{
 				"my-network-service",
 			},
@@ -279,7 +281,10 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 		names = append(names, result.Name)
 	}
 
-	client := registry.NewNetworkServiceEndpointRegistryClient(cc)
+	client := next.NewNetworkServiceEndpointRegistryClient(
+		setid.NewNetworkServiceEndpointRegistryClient(),
+		registry.NewNetworkServiceEndpointRegistryClient(cc),
+	)
 
 	<-time.After(time.Second)
 	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
