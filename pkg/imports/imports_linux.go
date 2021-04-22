@@ -19,7 +19,6 @@ import (
 	_ "github.com/networkservicemesh/sdk/pkg/tools/log"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/log/logruslogger"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/opentracing"
-	_ "github.com/networkservicemesh/sdk/pkg/tools/signalctx"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/spire"
 	_ "github.com/sirupsen/logrus"
 	_ "github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
@@ -33,7 +32,9 @@ import (
 	_ "google.golang.org/grpc/health/grpc_health_v1"
 	_ "net/url"
 	_ "os"
+	_ "os/signal"
 	_ "path/filepath"
+	_ "syscall"
 	_ "testing"
 	_ "time"
 )
