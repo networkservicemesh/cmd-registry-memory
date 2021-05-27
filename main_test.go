@@ -41,6 +41,7 @@ import (
 
 	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/serialize"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
@@ -187,8 +188,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
 		setid.NewNetworkServiceEndpointRegistryClient(),
-		refresh.NewNetworkServiceEndpointRegistryClient(
-			refresh.WithDefaultExpiryDuration(time.Second*5)),
+		serialize.NewNetworkServiceEndpointRegistryClient(),
+		refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
@@ -266,8 +267,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	for i := 0; i < clientCount; i++ {
 		client := next.NewNetworkServiceEndpointRegistryClient(
 			setid.NewNetworkServiceEndpointRegistryClient(),
-			refresh.NewNetworkServiceEndpointRegistryClient(
-				refresh.WithDefaultExpiryDuration(time.Millisecond*200)),
+			serialize.NewNetworkServiceEndpointRegistryClient(),
+			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
@@ -283,6 +284,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
 		setid.NewNetworkServiceEndpointRegistryClient(),
+		serialize.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
