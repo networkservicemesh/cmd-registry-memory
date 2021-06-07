@@ -25,4 +25,4 @@ CMD dlv -l :40000 --headless=true --api-version=2 test -test.v ./...
 FROM alpine as runtime
 COPY --from=build /bin/registry-memory /bin/registry-memory
 COPY --from=build /bin/grpc-health-probe /bin/grpc-health-probe
-CMD /bin/registry-memory
+ENTRYPOINT ["/bin/registry-memory"]
