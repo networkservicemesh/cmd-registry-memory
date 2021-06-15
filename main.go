@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/edwarnicke/grpcfd"
+
 	"github.com/networkservicemesh/sdk/pkg/tools/jaeger"
 	"github.com/networkservicemesh/sdk/pkg/tools/opentracing"
 
