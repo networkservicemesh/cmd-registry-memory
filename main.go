@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build !windows
+
 package main
 
 import (
@@ -23,6 +25,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/edwarnicke/grpcfd"
 
 	"github.com/networkservicemesh/sdk/pkg/tools/jaeger"
 	"github.com/networkservicemesh/sdk/pkg/tools/opentracing"
@@ -105,7 +109,18 @@ func main() {
 	serverOptions := append(opentracing.WithTracing(), grpc.Creds(credsTLS))
 	server := grpc.NewServer(serverOptions...)
 
-	clientOptions := append(opentracing.WithTracingDial(), grpc.WithBlock(), grpc.WithTransportCredentials(credsTLS))
+	clientOptions := append(
+		opentracing.WithTracingDial(),
+		grpc.WithBlock(),
+		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
+		grpc.WithTransportCredentials(
+			grpcfd.TransportCredentials(
+				credentials.NewTLS(
+					tlsconfig.MTLSClientConfig(source, source, tlsconfig.AuthorizeAny()),
+				),
+			),
+		),
+	)
 	memory.NewServer(ctx, time.Minute, &config.ProxyRegistryURL, clientOptions...).Register(server)
 
 	for i := 0; i < len(config.ListenOn); i++ {
