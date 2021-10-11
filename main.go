@@ -51,6 +51,7 @@ type Config struct {
 	ListenOn         []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
 	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	LogLevel         string        `default:"INFO" desc:"Log level" split_words:"true"`
 }
 
 func main() {
@@ -90,6 +91,12 @@ func main() {
 	if err := envconfig.Process("registry_memory", config); err != nil {
 		logrus.Fatalf("error processing config from env: %+v", err)
 	}
+
+	l, err := logrus.ParseLevel(config.LogLevel)
+	if err != nil {
+		logrus.Fatalf("invalid log level %s", config.LogLevel)
+	}
+	logrus.SetLevel(l)
 
 	log.FromContext(ctx).Infof("Config: %#v", config)
 
