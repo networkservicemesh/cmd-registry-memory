@@ -195,7 +195,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	)
 
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		Url: "tcp://127.0.0.1",
+		Name: "nse-1",
+		Url:  "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -230,7 +231,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	)
 	expireTime := time.Now().Add(time.Second)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		Url: "tcp://127.0.0.1",
+		Name: "nse-1",
+		Url:  "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -271,7 +273,8 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-			Url: "tcp://127.0.0.1",
+			Name: fmt.Sprintf("nse-%d", i),
+			Url:  "tcp://127.0.0.1",
 			NetworkServiceNames: []string{
 				"my-network-service",
 			},
