@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !windows
 // +build !windows
 
 package main_test
@@ -44,7 +45,6 @@ import (
 	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/serialize"
-	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
@@ -189,7 +189,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	t.NoError(err)
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		serialize.NewNetworkServiceEndpointRegistryClient(),
 		refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
@@ -227,7 +226,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	)
 	t.NoError(err)
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 	expireTime := time.Now().Add(time.Second)
@@ -268,7 +266,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	var names []string
 	for i := 0; i < clientCount; i++ {
 		client := next.NewNetworkServiceEndpointRegistryClient(
-			setid.NewNetworkServiceEndpointRegistryClient(),
 			serialize.NewNetworkServiceEndpointRegistryClient(),
 			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
@@ -285,7 +282,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	}
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		serialize.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)

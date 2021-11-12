@@ -13,7 +13,6 @@ import (
 	_ "github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/serialize"
-	_ "github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/debug"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
