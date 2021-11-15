@@ -290,7 +290,9 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	)
 
 	<-time.After(time.Second)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{NetworkServiceNames: []string{
+		"my-network-service",
+	}}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, clientCount)
