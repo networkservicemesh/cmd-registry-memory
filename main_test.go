@@ -44,7 +44,6 @@ import (
 	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/serialize"
-	"github.com/networkservicemesh/sdk/pkg/registry/common/setid"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
@@ -189,14 +188,14 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	t.NoError(err)
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		serialize.NewNetworkServiceEndpointRegistryClient(),
 		refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		Url: "tcp://127.0.0.1",
+		Name: "nse-1",
+		Url:  "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -227,12 +226,12 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	)
 	t.NoError(err)
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 	expireTime := time.Now().Add(time.Second)
 	result, err := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-		Url: "tcp://127.0.0.1",
+		Name: "nse-1",
+		Url:  "tcp://127.0.0.1",
 		NetworkServiceNames: []string{
 			"ns-1",
 		},
@@ -268,30 +267,32 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	var names []string
 	for i := 0; i < clientCount; i++ {
 		client := next.NewNetworkServiceEndpointRegistryClient(
-			setid.NewNetworkServiceEndpointRegistryClient(),
 			serialize.NewNetworkServiceEndpointRegistryClient(),
 			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
-			Url: "tcp://127.0.0.1",
+			Name: fmt.Sprintf("nse-%d", i),
+			Url:  "tcp://127.0.0.1",
 			NetworkServiceNames: []string{
 				"my-network-service",
 			},
 		})
+
 		t.NoError(regErr)
 		t.NotEmpty(result.Name)
 		names = append(names, result.Name)
 	}
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		setid.NewNetworkServiceEndpointRegistryClient(),
 		serialize.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
 	<-time.After(time.Second)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{NetworkServiceNames: []string{
+		"my-network-service",
+	}}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, clientCount)
