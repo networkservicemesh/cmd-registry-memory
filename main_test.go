@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !windows
 // +build !windows
 
 package main_test
@@ -291,10 +290,9 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	)
 
 	<-time.After(time.Second)
-	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: ""}})
+	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{Name: "my-network-service"}})
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
-	fmt.Println(len(list))
 	t.Len(list, clientCount)
 	for _, name := range names {
 		_, err = client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: name})
