@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 Doc.ai and/or its affiliates.
+// Copyright (c) 2020-2022 Doc.ai and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !windows
 // +build !windows
 
 package main
@@ -28,8 +29,8 @@ import (
 
 	"github.com/edwarnicke/grpcfd"
 
-	"github.com/networkservicemesh/sdk/pkg/tools/jaeger"
-	"github.com/networkservicemesh/sdk/pkg/tools/opentracing"
+	"github.com/networkservicemesh/sdk/pkg/tools/opentelemetry"
+	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/kelseyhightower/envconfig"
@@ -48,10 +49,11 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn         []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
-	ProxyRegistryURL url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
-	ExpirePeriod     time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
-	LogLevel         string        `default:"INFO" desc:"Log level" split_words:"true"`
+	ListenOn                  []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
+	ProxyRegistryURL          url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
+	ExpirePeriod              time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	LogLevel                  string        `default:"INFO" desc:"Log level" split_words:"true"`
+	OpenTelemetryCollectorURL string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector URL"`
 }
 
 func main() {
@@ -67,13 +69,9 @@ func main() {
 	defer cancel()
 
 	// Setup logging
+	log.EnableTracing(true)
 	logrus.SetFormatter(&nested.Formatter{})
 	ctx = log.WithLog(ctx, logruslogger.New(ctx, map[string]interface{}{"cmd": os.Args[0]}))
-
-	// Setup tracing
-	log.EnableTracing(true)
-	jaegerCloser := jaeger.InitJaeger(ctx, "registry-memory")
-	defer func() { _ = jaegerCloser.Close() }()
 
 	// Debug self if necessary
 	if err := debug.Self(); err != nil {
@@ -99,6 +97,19 @@ func main() {
 
 	log.FromContext(ctx).Infof("Config: %#v", config)
 
+	// Configure Open Telemetry
+	if opentelemetry.IsEnabled() {
+		collectorAddress := config.OpenTelemetryCollectorURL
+		spanExporter := opentelemetry.InitSpanExporter(ctx, collectorAddress)
+		metricExporter := opentelemetry.InitMetricExporter(ctx, collectorAddress)
+		o := opentelemetry.Init(ctx, spanExporter, metricExporter, "registry-memory")
+		defer func() {
+			if err = o.Close(); err != nil {
+				log.FromContext(ctx).Fatal(err)
+			}
+		}()
+	}
+
 	// Get a X509Source
 	source, err := workloadapi.NewX509Source(ctx)
 	if err != nil {
@@ -112,11 +123,11 @@ func main() {
 
 	credsTLS := credentials.NewTLS(tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeAny()))
 	// Create GRPC Server and register services
-	serverOptions := append(opentracing.WithTracing(), grpc.Creds(credsTLS))
+	serverOptions := append(tracing.WithTracing(), grpc.Creds(credsTLS))
 	server := grpc.NewServer(serverOptions...)
 
 	clientOptions := append(
-		opentracing.WithTracingDial(),
+		tracing.WithTracingDial(),
 		grpc.WithBlock(),
 		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
 		grpc.WithTransportCredentials(
