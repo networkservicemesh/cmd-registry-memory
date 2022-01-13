@@ -49,11 +49,11 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn                  []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
-	ProxyRegistryURL          url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
-	ExpirePeriod              time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
-	LogLevel                  string        `default:"INFO" desc:"Log level" split_words:"true"`
-	OpenTelemetryCollectorURL string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector URL"`
+	ListenOn              []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
+	ProxyRegistryURL      url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
+	ExpirePeriod          time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	LogLevel              string        `default:"INFO" desc:"Log level" split_words:"true"`
+	OpenTelemetryEndpoint string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
 }
 
 func main() {
@@ -99,13 +99,13 @@ func main() {
 
 	// Configure Open Telemetry
 	if opentelemetry.IsEnabled() {
-		collectorAddress := config.OpenTelemetryCollectorURL
+		collectorAddress := config.OpenTelemetryEndpoint
 		spanExporter := opentelemetry.InitSpanExporter(ctx, collectorAddress)
 		metricExporter := opentelemetry.InitMetricExporter(ctx, collectorAddress)
 		o := opentelemetry.Init(ctx, spanExporter, metricExporter, "registry-memory")
 		defer func() {
 			if err = o.Close(); err != nil {
-				log.FromContext(ctx).Fatal(err)
+				log.FromContext(ctx).Error(err.Error())
 			}
 		}()
 	}
