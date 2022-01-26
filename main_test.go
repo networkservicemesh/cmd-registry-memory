@@ -1,4 +1,6 @@
-// Copyright (c) 2020-2021 Doc.ai and/or its affiliates.
+// Copyright (c) 2020-2022 Doc.ai and/or its affiliates.
+//
+// Copyright (c) 2022 Cisco Systems, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -42,8 +44,8 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/networkservicemesh/api/pkg/api/registry"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/begin"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
-	"github.com/networkservicemesh/sdk/pkg/registry/common/serialize"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
@@ -188,7 +190,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	t.NoError(err)
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		serialize.NewNetworkServiceEndpointRegistryClient(),
+		begin.NewNetworkServiceEndpointRegistryClient(),
 		refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
@@ -267,7 +269,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	var names []string
 	for i := 0; i < clientCount; i++ {
 		client := next.NewNetworkServiceEndpointRegistryClient(
-			serialize.NewNetworkServiceEndpointRegistryClient(),
+			begin.NewNetworkServiceEndpointRegistryClient(),
 			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
@@ -285,7 +287,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	}
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
-		serialize.NewNetworkServiceEndpointRegistryClient(),
+		begin.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
