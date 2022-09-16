@@ -139,9 +139,7 @@ func main() {
 		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
 		grpc.WithTransportCredentials(
 			grpcfd.TransportCredentials(
-				credentials.NewTLS(
-					tlsClientConfig,
-				),
+				credentials.NewTLS(tlsClientConfig),
 			),
 		),
 	)
