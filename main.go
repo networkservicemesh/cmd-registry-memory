@@ -16,6 +16,7 @@
 
 //go:build !windows
 
+// Package main defines a registry-memory application
 package main
 
 import (
