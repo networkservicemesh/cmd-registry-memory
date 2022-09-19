@@ -16,6 +16,7 @@
 
 //go:build !windows
 
+// Package main defines a registry-memory application
 package main
 
 import (
@@ -41,6 +42,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	"github.com/networkservicemesh/sdk/pkg/tools/debug"
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
@@ -137,13 +139,17 @@ func main() {
 		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
 		grpc.WithTransportCredentials(
 			grpcfd.TransportCredentials(
-				credentials.NewTLS(
-					tlsClientConfig,
-				),
+				credentials.NewTLS(tlsClientConfig),
 			),
 		),
 	)
-	memory.NewServer(ctx, time.Minute, &config.ProxyRegistryURL, clientOptions...).Register(server)
+	memory.NewServer(
+		ctx,
+		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer()),
+		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer()),
+		memory.WithExpireDuration(time.Minute),
+		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
+		memory.WithDialOptions(clientOptions...)).Register(server)
 
 	for i := 0; i < len(config.ListenOn); i++ {
 		srvErrCh := grpcutils.ListenAndServe(ctx, &config.ListenOn[i], server)
