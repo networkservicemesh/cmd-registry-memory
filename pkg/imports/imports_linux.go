@@ -12,7 +12,6 @@ import (
 	_ "github.com/kelseyhightower/envconfig"
 	_ "github.com/networkservicemesh/api/pkg/api/registry"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
-	_ "github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/begin"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/core/next"
