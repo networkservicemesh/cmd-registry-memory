@@ -42,6 +42,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	"github.com/networkservicemesh/sdk/pkg/tools/debug"
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
@@ -144,6 +145,8 @@ func main() {
 	)
 	memory.NewServer(
 		ctx,
+		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer(authorize.Any())),
+		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer(authorize.Any())),
 		memory.WithExpireDuration(time.Minute),
 		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
 		memory.WithDialOptions(clientOptions...)).Register(server)
