@@ -31,6 +31,8 @@ import (
 	"github.com/edwarnicke/grpcfd"
 
 	"github.com/networkservicemesh/sdk/pkg/tools/opentelemetry"
+	"github.com/networkservicemesh/sdk/pkg/tools/spiffejwt"
+	"github.com/networkservicemesh/sdk/pkg/tools/token"
 	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
@@ -52,6 +54,7 @@ import (
 // Config is configuration for cmd-registry-memory
 type Config struct {
 	ListenOn              []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
+	MaxTokenLifetime      time.Duration `default:"10m" desc:"maximum lifetime of tokens" split_words:"true"`
 	ProxyRegistryURL      url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 	ExpirePeriod          time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 	LogLevel              string        `default:"INFO" desc:"Log level" split_words:"true"`
@@ -136,17 +139,18 @@ func main() {
 	clientOptions := append(
 		tracing.WithTracingDial(),
 		grpc.WithBlock(),
-		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
+		grpc.WithDefaultCallOptions(
+			grpc.WaitForReady(true),
+			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(source, config.MaxTokenLifetime)))),
 		grpc.WithTransportCredentials(
-			grpcfd.TransportCredentials(
-				credentials.NewTLS(tlsClientConfig),
-			),
-		),
+			grpcfd.TransportCredentials(credentials.NewTLS(tlsClientConfig))),
 	)
 	memory.NewServer(
 		ctx,
-		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer(authorize.Any())),
-		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer(authorize.Any())),
+		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer()),
+		memory.WithAuthorizeNSERegistryClient(authorize.NewNetworkServiceEndpointRegistryClient()),
+		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer()),
+		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceEndpointRegistryClient()),
 		memory.WithExpireDuration(time.Minute),
 		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
 		memory.WithDialOptions(clientOptions...)).Register(server)
