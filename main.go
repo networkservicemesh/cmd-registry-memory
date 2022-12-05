@@ -144,13 +144,17 @@ func main() {
 			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(source, config.MaxTokenLifetime)))),
 		grpc.WithTransportCredentials(
 			grpcfd.TransportCredentials(credentials.NewTLS(tlsClientConfig))),
+		grpcfd.WithChainStreamInterceptor(),
+		grpcfd.WithChainUnaryInterceptor(),
 	)
+
 	memory.NewServer(
 		ctx,
+		spiffejwt.TokenGeneratorFunc(source, config.MaxTokenLifetime),
 		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer()),
 		memory.WithAuthorizeNSERegistryClient(authorize.NewNetworkServiceEndpointRegistryClient()),
 		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer()),
-		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceEndpointRegistryClient()),
+		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceRegistryClient()),
 		memory.WithExpireDuration(time.Minute),
 		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
 		memory.WithDialOptions(clientOptions...)).Register(server)
