@@ -30,6 +30,7 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/exechelper"
+	"github.com/edwarnicke/grpcfd"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
@@ -45,10 +46,13 @@ import (
 
 	"github.com/networkservicemesh/api/pkg/api/registry"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/begin"
+	"github.com/networkservicemesh/sdk/pkg/registry/common/grpcmetadata"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
+	"github.com/networkservicemesh/sdk/pkg/tools/spiffejwt"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
+	"github.com/networkservicemesh/sdk/pkg/tools/token"
 
 	main "github.com/networkservicemesh/cmd-registry-memory"
 )
@@ -159,9 +163,18 @@ func (t *RegistryTestSuite) TestNetworkServiceRegistration() {
 	cc, err := grpc.DialContext(ctx,
 		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+		grpc.WithDefaultCallOptions(
+			grpc.WaitForReady(true),
+			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(t.x509source, t.config.MaxTokenLifetime))),
+		),
+		grpcfd.WithChainStreamInterceptor(),
+		grpcfd.WithChainUnaryInterceptor(),
 	)
 	t.NoError(err)
-	client := registry.NewNetworkServiceRegistryClient(cc)
+	client := next.NewNetworkServiceRegistryClient(
+		grpcmetadata.NewNetworkServiceRegistryClient(),
+		registry.NewNetworkServiceRegistryClient(cc),
+	)
 	_, err = client.Register(context.Background(), &registry.NetworkService{
 		Name: "ns-1",
 	})
@@ -186,12 +199,19 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 	cc, err := grpc.DialContext(ctx,
 		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+		grpc.WithDefaultCallOptions(
+			grpc.WaitForReady(true),
+			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(t.x509source, t.config.MaxTokenLifetime))),
+		),
+		grpcfd.WithChainStreamInterceptor(),
+		grpcfd.WithChainUnaryInterceptor(),
 	)
 	t.NoError(err)
 
 	client := next.NewNetworkServiceEndpointRegistryClient(
 		begin.NewNetworkServiceEndpointRegistryClient(),
 		refresh.NewNetworkServiceEndpointRegistryClient(ctx),
+		grpcmetadata.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 
@@ -203,18 +223,18 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistration() {
 		},
 	})
 
-	t.Nil(err)
+	t.NoError(err)
 	t.NotEmpty(result.Name)
 	stream, err := client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: &registry.NetworkServiceEndpoint{
 		Name: result.Name,
 	}})
-	t.Nil(err)
+	t.NoError(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, 1)
 	_, err = client.Unregister(context.Background(), result)
-	t.Nil(err)
+	t.NoError(err)
 	stream, err = client.Find(context.Background(), &registry.NetworkServiceEndpointQuery{NetworkServiceEndpoint: result})
-	t.Nil(err)
+	t.NoError(err)
 	list = registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, 0)
 }
@@ -225,9 +245,16 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	cc, err := grpc.DialContext(ctx,
 		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+		grpc.WithDefaultCallOptions(
+			grpc.WaitForReady(true),
+			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(t.x509source, t.config.MaxTokenLifetime))),
+		),
+		grpcfd.WithChainStreamInterceptor(),
+		grpcfd.WithChainUnaryInterceptor(),
 	)
 	t.NoError(err)
 	client := next.NewNetworkServiceEndpointRegistryClient(
+		grpcmetadata.NewNetworkServiceEndpointRegistryClient(),
 		registry.NewNetworkServiceEndpointRegistryClient(cc),
 	)
 	expireTime := time.Now().Add(time.Second)
@@ -262,6 +289,12 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	cc, err := grpc.DialContext(ctx,
 		t.config.ListenOn[0].String(),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
+		grpc.WithDefaultCallOptions(
+			grpc.WaitForReady(true),
+			grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(t.x509source, t.config.MaxTokenLifetime))),
+		),
+		grpcfd.WithChainStreamInterceptor(),
+		grpcfd.WithChainUnaryInterceptor(),
 	)
 	t.NoError(err)
 
@@ -271,6 +304,7 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 		client := next.NewNetworkServiceEndpointRegistryClient(
 			begin.NewNetworkServiceEndpointRegistryClient(),
 			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
+			grpcmetadata.NewNetworkServiceEndpointRegistryClient(),
 			registry.NewNetworkServiceEndpointRegistryClient(cc),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
