@@ -14,6 +14,7 @@ import (
 	_ "github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/begin"
+	_ "github.com/networkservicemesh/sdk/pkg/registry/common/grpcmetadata"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/core/next"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/debug"
