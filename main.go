@@ -53,12 +53,14 @@ import (
 
 // Config is configuration for cmd-registry-memory
 type Config struct {
-	ListenOn              []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
-	MaxTokenLifetime      time.Duration `default:"10m" desc:"maximum lifetime of tokens" split_words:"true"`
-	ProxyRegistryURL      url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
-	ExpirePeriod          time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
-	LogLevel              string        `default:"INFO" desc:"Log level" split_words:"true"`
-	OpenTelemetryEndpoint string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	ListenOn               []url.URL     `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
+	MaxTokenLifetime       time.Duration `default:"10m" desc:"maximum lifetime of tokens" split_words:"true"`
+	RegistryServerPolicies []string      `default:"etc/nsm/opa/common/.*.rego,etc/nsm/opa/registry/.*.rego,etc/nsm/opa/server/.*.rego" desc:"paths to files and directories that contain registry server policies" split_words:"true"`
+	RegistryClientPolicies []string      `default:"etc/nsm/opa/common/.*.rego,etc/nsm/opa/registry/.*.rego,etc/nsm/opa/client/.*.rego" desc:"paths to files and directories that contain registry client policies" split_words:"true"`
+	ProxyRegistryURL       url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
+	ExpirePeriod           time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
+	LogLevel               string        `default:"INFO" desc:"Log level" split_words:"true"`
+	OpenTelemetryEndpoint  string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
 }
 
 func main() {
@@ -151,10 +153,14 @@ func main() {
 	memory.NewServer(
 		ctx,
 		spiffejwt.TokenGeneratorFunc(source, config.MaxTokenLifetime),
-		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer()),
-		memory.WithAuthorizeNSERegistryClient(authorize.NewNetworkServiceEndpointRegistryClient()),
-		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer()),
-		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceRegistryClient()),
+		memory.WithAuthorizeNSERegistryServer(authorize.NewNetworkServiceEndpointRegistryServer(
+			authorize.WithPolicies(config.RegistryServerPolicies...))),
+		memory.WithAuthorizeNSERegistryClient(authorize.NewNetworkServiceEndpointRegistryClient(
+			authorize.WithPolicies(config.RegistryClientPolicies...))),
+		memory.WithAuthorizeNSRegistryServer(authorize.NewNetworkServiceRegistryServer(
+			authorize.WithPolicies(config.RegistryServerPolicies...))),
+		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceRegistryClient(
+			authorize.WithPolicies(config.RegistryClientPolicies...))),
 		memory.WithExpireDuration(time.Minute),
 		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
 		memory.WithDialOptions(clientOptions...)).Register(server)
