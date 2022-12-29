@@ -161,7 +161,7 @@ func main() {
 			authorize.WithPolicies(config.RegistryServerPolicies...))),
 		memory.WithAuthorizeNSRegistryClient(authorize.NewNetworkServiceRegistryClient(
 			authorize.WithPolicies(config.RegistryClientPolicies...))),
-		memory.WithExpireDuration(time.Minute),
+		memory.WithDefaultExpiration(time.Minute),
 		memory.WithProxyRegistryURL(&config.ProxyRegistryURL),
 		memory.WithDialOptions(clientOptions...)).Register(server)
 
