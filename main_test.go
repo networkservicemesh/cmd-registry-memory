@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2022 Doc.ai and/or its affiliates.
 //
-// Copyright (c) 2022 Cisco Systems, Inc.
+// Copyright (c) 2022-2023 Cisco Systems, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -45,6 +45,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/networkservicemesh/api/pkg/api/registry"
+	registryclient "github.com/networkservicemesh/sdk/pkg/registry/chains/client"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/begin"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/grpcmetadata"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/refresh"
@@ -283,11 +284,12 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointRegistrationExpiration() {
 	}, time.Until(result.GetExpirationTime().AsTime())+time.Second*5, time.Millisecond*100)
 }
 
+/*
+ */
 func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	ctx, cancel := context.WithTimeout(t.ctx, 100*time.Second)
 	defer cancel()
-	cc, err := grpc.DialContext(ctx,
-		t.config.ListenOn[0].String(),
+	var dialOpts = []grpc.DialOption{
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsconfig.MTLSClientConfig(t.x509source, t.x509bundle, tlsconfig.AuthorizeAny()))),
 		grpc.WithDefaultCallOptions(
 			grpc.WaitForReady(true),
@@ -295,17 +297,13 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 		),
 		grpcfd.WithChainStreamInterceptor(),
 		grpcfd.WithChainUnaryInterceptor(),
-	)
-	t.NoError(err)
+	}
 
 	clientCount := 10
-	var names []string
 	for i := 0; i < clientCount; i++ {
-		client := next.NewNetworkServiceEndpointRegistryClient(
-			begin.NewNetworkServiceEndpointRegistryClient(),
-			refresh.NewNetworkServiceEndpointRegistryClient(ctx),
-			grpcmetadata.NewNetworkServiceEndpointRegistryClient(),
-			registry.NewNetworkServiceEndpointRegistryClient(cc),
+		client := registryclient.NewNetworkServiceEndpointRegistryClient(ctx,
+			registryclient.WithClientURL(&t.config.ListenOn[0]),
+			registryclient.WithDialOptions(dialOpts...),
 		)
 		result, regErr := client.Register(context.Background(), &registry.NetworkServiceEndpoint{
 			Name: fmt.Sprintf("nse-%d", i),
@@ -317,12 +315,16 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 
 		t.NoError(regErr)
 		t.NotEmpty(result.Name)
-		names = append(names, result.Name)
+
+		defer func() {
+			_, err := client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: result.Name})
+			t.NoError(err)
+		}()
 	}
 
-	client := next.NewNetworkServiceEndpointRegistryClient(
-		begin.NewNetworkServiceEndpointRegistryClient(),
-		registry.NewNetworkServiceEndpointRegistryClient(cc),
+	client := registryclient.NewNetworkServiceEndpointRegistryClient(ctx,
+		registryclient.WithClientURL(&t.config.ListenOn[0]),
+		registryclient.WithDialOptions(dialOpts...),
 	)
 
 	<-time.After(time.Second)
@@ -332,10 +334,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 	t.Nil(err)
 	list := registry.ReadNetworkServiceEndpointList(stream)
 	t.Len(list, clientCount)
-	for _, name := range names {
-		_, err = client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: name})
-	}
-	t.NoError(err)
 }
 
 func TestRegistryTestSuite(t *testing.T) {

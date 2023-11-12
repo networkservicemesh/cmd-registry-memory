@@ -11,6 +11,7 @@ import (
 	_ "github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/kelseyhightower/envconfig"
 	_ "github.com/networkservicemesh/api/pkg/api/registry"
+	_ "github.com/networkservicemesh/sdk/pkg/registry/chains/client"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/chains/memory"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	_ "github.com/networkservicemesh/sdk/pkg/registry/common/begin"
