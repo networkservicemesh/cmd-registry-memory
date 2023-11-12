@@ -320,7 +320,6 @@ func (t *RegistryTestSuite) TestNetworkServiceEndpointClientRefreshingTime() {
 			_, err := client.Unregister(ctx, &registry.NetworkServiceEndpoint{Name: result.Name})
 			t.NoError(err)
 		}()
-
 	}
 
 	client := registryclient.NewNetworkServiceEndpointRegistryClient(ctx,
