@@ -79,7 +79,7 @@ func (t *RegistryTestSuite) SetupSuite() {
 	require.NoError(t.T(), err)
 	t.spireErrCh = spire.Start(
 		spire.WithContext(t.ctx),
-		spire.WithEntry("spiffe://example.org/registry-memory", "unix:path:/bin/registry-memory"),
+		spire.WithEntry("spiffe://example.org/registry-memory", "unix:path:/usr/bin/registry-memory"),
 		spire.WithEntry(fmt.Sprintf("spiffe://example.org/%s", filepath.Base(executable)),
 			fmt.Sprintf("unix:path:%s", executable),
 		),
