@@ -3,10 +3,10 @@ ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 ENV GOBIN=/bin
 ARG BUILDARCH=amd64
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.8.2
-RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.22
-ADD https://github.com/spiffe/spire/releases/download/v1.8.0/spire-1.8.0-linux-${BUILDARCH}-musl.tar.gz .
-RUN tar xzvf spire-1.8.0-linux-${BUILDARCH}-musl.tar.gz -C /bin --strip=2 spire-1.8.0/bin/spire-server spire-1.8.0/bin/spire-agent
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.22.0
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.24
+ADD https://github.com/spiffe/spire/releases/download/v1.8.7/spire-1.8.7-linux-${BUILDARCH}-musl.tar.gz .
+RUN tar xzvf spire-1.8.7-linux-${BUILDARCH}-musl.tar.gz -C /bin --strip=2 spire-1.8.7/bin/spire-server spire-1.8.7/bin/spire-agent
 
 FROM go as build
 WORKDIR /build
