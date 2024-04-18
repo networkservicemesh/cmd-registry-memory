@@ -2,6 +2,8 @@
 //
 // Copyright (c) 2023 Cisco Systems, Inc.
 //
+// Copyright (c) 2024 OpenInfra Foundation Europe. All rights reserved.
+//
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +64,7 @@ type Config struct {
 	ProxyRegistryURL       url.URL       `desc:"url to the proxy registry that handles this domain" split_words:"true"`
 	ExpirePeriod           time.Duration `default:"1s" desc:"period to check expired NSEs" split_words:"true"`
 	LogLevel               string        `default:"INFO" desc:"Log level" split_words:"true"`
-	OpenTelemetryEndpoint  string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	OpenTelemetryEndpoint  string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint" split_words:"true"`
 	MetricsExportInterval  time.Duration `default:"10s" desc:"interval between mertics exports" split_words:"true"`
 }
 
@@ -92,10 +94,10 @@ func main() {
 
 	// Get config from environment
 	config := &Config{}
-	if err := envconfig.Usage("registry_memory", config); err != nil {
+	if err := envconfig.Usage("nsm", config); err != nil {
 		logrus.Fatal(err)
 	}
-	if err := envconfig.Process("registry_memory", config); err != nil {
+	if err := envconfig.Process("nsm", config); err != nil {
 		logrus.Fatalf("error processing config from env: %+v", err)
 	}
 
