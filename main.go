@@ -53,6 +53,7 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/log/logruslogger"
+	"github.com/networkservicemesh/sdk/pkg/tools/pprofutils"
 )
 
 // Config is configuration for cmd-registry-memory
@@ -66,6 +67,8 @@ type Config struct {
 	LogLevel               string        `default:"INFO" desc:"Log level" split_words:"true"`
 	OpenTelemetryEndpoint  string        `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint" split_words:"true"`
 	MetricsExportInterval  time.Duration `default:"10s" desc:"interval between mertics exports" split_words:"true"`
+	PprofEnabled           bool          `default:"false" desc:"is pprof enabled" split_words:"true"`
+	PprofListenOn          string        `default:"localhost:6060" desc:"pprof URL to ListenAndServe" split_words:"true"`
 }
 
 func main() {
@@ -120,6 +123,11 @@ func main() {
 				log.FromContext(ctx).Error(err.Error())
 			}
 		}()
+	}
+
+	// Configure pprof
+	if config.PprofEnabled {
+		go pprofutils.ListenAndServe(ctx, config.PprofListenOn)
 	}
 
 	// Get a X509Source
