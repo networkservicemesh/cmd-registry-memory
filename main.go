@@ -112,6 +112,11 @@ func main() {
 
 	log.FromContext(ctx).Infof("Config: %#v", config)
 
+	logruslogger.SetupLevelChangeOnSignal(ctx, map[os.Signal]logrus.Level{
+		syscall.SIGUSR1: logrus.TraceLevel,
+		syscall.SIGUSR2: l,
+	})
+
 	// Configure Open Telemetry
 	if opentelemetry.IsEnabled() {
 		collectorAddress := config.OpenTelemetryEndpoint
